@@ -1,0 +1,16 @@
+/dist/*
+!/dist/css/
+/dist/css/*
+!/dist/css/uikit-datepicker.css
+!/dist/css/uikit-datepicker.min.css
+!/dist/css/uikit-datepicker-rtl.css
+!/dist/css/uikit-datepicker-rtl.min.css
+!/dist/js/
+/dist/js/*
+!/dist/js/uikit-datepicker.js
+!/dist/js/uikit-datepicker.min.js
+/node_modules
+/tests/js/test*
+/tests/css/*
+.DS_Store
+/.idea
