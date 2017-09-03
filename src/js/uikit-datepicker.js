@@ -1,10 +1,12 @@
+import { $, isTouch, query } from '../../node_modules/uikit/src/js/util/index';
+
 function plugin(UIkit) {
 
     if (plugin.installed) {
         return;
     }
 
-    UIkit.component('datepicker', {
+    UIkit.component('datepicker', UIkit.components.drop.extend({
 
         mixins: [UIkit.mixin.class],
 
@@ -18,114 +20,122 @@ function plugin(UIkit) {
         },
 
         defaults: {
+            mobile: false,
             weekstart: 1,
             format: 'YYYY-MM-DD',
             minDate: false,
-            maxDate: false
+            maxDate: false,
+            cls: 'uk-active',
+            clsDatepicker: false
         },
 
-        computed: {
-
-            date() {
-                return Date.parse(this.$props.date);
-            },
-
-            days() {
-                return this.$el.find(this.clsWrapper.replace('%unit%', 'days'));
-            },
-
-            hours() {
-                return this.$el.find(this.clsWrapper.replace('%unit%', 'hours'));
-            },
-
-            minutes() {
-                return this.$el.find(this.clsWrapper.replace('%unit%', 'minutes'));
-            },
-
-            seconds() {
-                return this.$el.find(this.clsWrapper.replace('%unit%', 'seconds'));
-            },
-
-            units() {
-                return ['days', 'hours', 'minutes', 'seconds'].filter(unit => this[unit].length);
+        init() {
+            // use native datepicker on touch devices
+            if (this.$el.attr('type') == 'date' && !this.$props.mobile) {
+                return;
             }
 
+            this.clsDatepicker = this.clsDatepicker || `uk-${this.$options.name}`;
+
+            this.$addClass(this.clsDatepicker);
         },
 
-        connected() {
-            this.start();
+        ready() {
+
+            console.log('Datepicker is ready!');
+
         },
 
-        disconnected() {
-            this.stop();
-            this.units.forEach(unit => this[unit].empty());
-        },
+        events: [
 
-        update: {
+            {
 
-            write() {
+                name: 'click focus',
 
-                var timespan = getTimeSpan(this.date);
+                delegate() {
+                    return `.${this.clsDrop}-close`;
+                },
 
-                if (timespan.total <= 0) {
-
-                    this.stop();
-
-                    timespan.days
-                        = timespan.hours
-                        = timespan.minutes
-                        = timespan.seconds
-                        = 0;
+                handler(e) {
+                    e.preventDefault();
+                    this.hide(false);
                 }
 
-                this.units.forEach(unit => {
+            },
 
-                    var digits = String(Math.floor(timespan[unit]));
+            {
 
-                    digits = digits.length < 2 ? `0${digits}` : digits;
+                name: 'click focus',
 
-                    if (this[unit].text() !== digits) {
-                        var el = this[unit];
-                        digits = digits.split('');
+                delegate() {
+                    return 'a[href^="#"]';
+                },
 
-                        if (digits.length !== el.children().length) {
-                            el.empty().append(digits.map(() => '<span></span>').join(''));
-                        }
+                handler(e) {
 
-                        digits.forEach((digit, i) => el[0].childNodes[i].innerText = digit);
+                    if (e.isDefaultPrevented() || isTouch(e)) {
+                        return;
                     }
 
-                });
+                    var id = e.target.hash;
+
+                    if (!id) {
+                        e.preventDefault();
+                    }
+
+                    if (!id || !isWithin(id, this.$el)) {
+                        this.hide(false);
+                    }
+                }
+
+            },
+
+            {
+
+                name: 'toggle',
+
+                handler(e, toggle) {
+
+                    if (toggle && !this.$el.is(toggle.target)) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    if (this.isToggled()) {
+                        this.hide(false);
+                    } else {
+                        this.show(toggle, false);
+                    }
+                }
 
             }
 
-        },
+        ],
 
         methods: {
 
-            start() {
+            initialize() {
 
-                this.stop();
-
-                if (this.date && this.units.length) {
-                    this.$emit();
-                    this.timer = setInterval(() => this.$emit(), 1000);
-                }
+                Drop(this.$el);
 
             },
 
-            stop() {
+            show() {
 
-                if (this.timer) {
-                    clearInterval(this.timer);
-                    this.timer = null;
-                }
+                // show datepicker
+
+            },
+
+            hide() {
+
+                // hide datepicker
 
             }
 
         }
 
-    });
+    }));
 
 }
 
